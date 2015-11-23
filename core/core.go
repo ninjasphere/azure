@@ -96,7 +96,9 @@ func (core Core) RequestUrl() string {
 
 func (core Core) complementHeaderInformations() {
 	core.AzureRequest.Request.Header.Add("x-ms-date", core.formattedRequestTime())
-	core.AzureRequest.Request.Header.Add("x-ms-version", version)
+	if _, ok := core.AzureRequest.Header["x-ms-version"]; !ok {
+		core.AzureRequest.Request.Header.Add("x-ms-version", version)
+	}
 	core.AzureRequest.Request.Header.Add("Authorization", core.authorizationHeader())
 }
 
@@ -209,9 +211,14 @@ params:
  Range
 */
 func (core Core) signature() string {
+
+	conLength := core.contentLength()
+	if conLength == "0" && core.AzureRequest.Header["x-ms-version"] == "2015-04-05" {
+		conLength = ""
+	}
 	signature := fmt.Sprintf("%s\n\n\n%s\n\n%s\n\n\n\n\n\n\n%s\n%s",
 		strings.ToUpper(core.AzureRequest.Method),
-		core.contentLength(),
+		conLength,
 		core.AzureRequest.Request.Header.Get("Content-Type"),
 		core.canonicalizedHeaders(),
 		core.canonicalizedResource())

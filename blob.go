@@ -3,13 +3,14 @@ package azure
 import (
 	"encoding/xml"
 	"fmt"
-	"github.com/loldesign/azure/core"
 	"io"
 	"mime"
 	"net/http"
 	"path"
 	"strings"
 	"time"
+
+	"github.com/loldesign/azure/core"
 )
 
 var client = &http.Client{}
@@ -92,6 +93,36 @@ func (a Azure) FileUpload(container, name string, body io.Reader) (*http.Respons
 		Blob:        name,
 		Body:        body,
 		Header:      map[string]string{"x-ms-blob-type": "BlockBlob", "Accept-Charset": "UTF-8", "Content-Type": contentType},
+		RequestTime: time.Now().UTC()}
+
+	return a.doRequest(azureRequest)
+}
+
+func (a Azure) CreateAppendBlob(container, name string) (*http.Response, error) {
+	extension := strings.ToLower(path.Ext(name))
+	contentType := mime.TypeByExtension(extension)
+
+	azureRequest := core.AzureRequest{
+		Method:      "put",
+		Container:   container,
+		Blob:        name,
+		Header:      map[string]string{"x-ms-blob-type": "AppendBlob", "Accept-Charset": "UTF-8", "Content-Type": contentType, "x-ms-version": "2015-04-05"},
+		RequestTime: time.Now().UTC()}
+
+	return a.doRequest(azureRequest)
+}
+
+func (a Azure) AppendBlock(container, name string, body io.Reader) (*http.Response, error) {
+	extension := strings.ToLower(path.Ext(name))
+	contentType := mime.TypeByExtension(extension)
+
+	azureRequest := core.AzureRequest{
+		Method:      "put",
+		Container:   container,
+		Blob:        name,
+		Resource:    "?comp=appendblock",
+		Body:        body,
+		Header:      map[string]string{"Accept-Charset": "UTF-8", "Content-Type": contentType, "x-ms-version": "2015-04-05"},
 		RequestTime: time.Now().UTC()}
 
 	return a.doRequest(azureRequest)
