@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/loldesign/azure/core"
+	"github.com/ninjasphere/azure/core"
 )
 
 var client = &http.Client{}
